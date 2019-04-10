@@ -15,14 +15,18 @@ class WeatherData: NSObject, Mappable {
     var dailyHigh: Double?
     var dailyLow: Double?
     var summary: String?
+    var timezone: String?
+    var time : UInt64?
     
     required init?(map: Map) {
     }
     
     func mapping(map: Map) {
         currentTemp <- map["currently.temperature"]
+        time <- map["currently.time"]
         dailyHigh <- map["daily.data.0.temperatureHigh"]
         dailyLow <- map["daily.data.0.temperatureLow"]
         summary <- map["currently.summary"]
+        timezone <- map["timezone"]
     }
 }

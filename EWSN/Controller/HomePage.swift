@@ -51,6 +51,7 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupLocation()
         callWeatherApi()
     }
     
@@ -59,17 +60,17 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
         
         APIHandler.sharedInstance.fetchData(latitude, longitude) { (result) in
             let weatherObj : WeatherData  = result!
+            let low = "L: " + String(format: "%.2f", (weatherObj.dailyLow)!)
+            let high = "H:" + String(format: "%.2f", (weatherObj.dailyHigh)!)
+            let today = self.formatDate(time: (weatherObj.time)!, format: "YYYY-MM-dd")
+            let now = self.formatDate(time: (weatherObj.time)!, format: "hh:mm")
+            let here = String((weatherObj.timezone)!)
             DispatchQueue.main.async {
-                let low = String(format: "%.2f", (weatherObj.dailyLow)!)
-                let high = String(format: "%.2f", (weatherObj.dailyHigh)!)
-                let today = self.today()
-                let now = self.now()
-                
-                
                 self.mainHighLowTemp.text = high + " " + low
                 self.mainDate.text = today
-                self.mainLocation.text = self.here
+                self.mainLocation.text = here
                 self.mainTime.text = now
+                self.summary.text = weatherObj.summary
                 
                 self.centerHigh.text = high
                 self.centerLow.text = low
@@ -90,20 +91,12 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
         }
     }
     
-    func today() -> String{
-        let date = Date()
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "EEEE"
-        let today = dateFormatter.string(from: date)
-        return today
-    }
-    
-    func now() -> String{
-        let date = Date()
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "hh:mm"
-        let now = dateFormatter.string(from: date)
-        return now
+    func formatDate(time : UInt64, format : String) -> String? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        let interval = TimeInterval(exactly: time)!
+        let date = Date.init(timeIntervalSince1970: interval)
+        return formatter.string(from: date)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -112,32 +105,19 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let loc = locations.last{
-            print(loc)
-            print(loc.coordinate)
             latitude = loc.coordinate.latitude
             longitude = loc.coordinate.longitude
             locationManager.stopUpdatingLocation()
-            getCityName(loc: loc)
             callWeatherApi()
         }
     }
     
     func setupLocation(){
-        locationManager.requestAlwaysAuthorization()
+        locationManager.requestWhenInUseAuthorization()
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.delegate = self
-        if CLLocationManager.authorizationStatus() == .authorizedAlways{
+        if CLLocationManager.authorizationStatus() == .authorizedWhenInUse{
             locationManager.startUpdatingLocation()
         }
     }
-    
-    func getCityName(loc: CLLocation){
-        let geoCoder = CLGeocoder()
-        geoCoder.reverseGeocodeLocation(loc) { (placemarks, error) in
-            if let place = placemarks?.last{
-                self.here = (place.locality)!
-            }
-        }
-    }
-
 }
