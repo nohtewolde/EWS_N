@@ -10,9 +10,11 @@ import UIKit
 import CoreLocation
 import Alamofire
 import ObjectMapper
+import GooglePlaces
 
-class HomePage: UIViewController, CLLocationManagerDelegate  {
+class HomePage: UIViewController, CLLocationManagerDelegate {
 
+    @IBOutlet weak var weeklyView: UICollectionView!
     @IBOutlet weak var profileImage: UIImageView!
     @IBOutlet weak var username: UILabel!
     @IBOutlet weak var greetingMsg: UILabel!
@@ -24,29 +26,10 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
     @IBOutlet weak var mainDate: UILabel!
     @IBOutlet weak var mainImg: UIImageView!
     
-    @IBOutlet weak var leftImg: UIImageView!
-    @IBOutlet weak var leftLocation: UILabel!
-    @IBOutlet weak var leftDate: UILabel!
-    @IBOutlet weak var leftLow: UILabel!
-    @IBOutlet weak var leftHigh: UILabel!
-    
-    
-    @IBOutlet weak var centerImg: UIImageView!
-    @IBOutlet weak var centerLocation: UILabel!
-    @IBOutlet weak var centerDate: UILabel!
-    @IBOutlet weak var centerLow: UILabel!
-    @IBOutlet weak var centerHigh: UILabel!
-    
-    
-    @IBOutlet weak var rightLocation: UILabel!
-    @IBOutlet weak var rightDate: UILabel!
-    @IBOutlet weak var rightLow: UILabel!
-    @IBOutlet weak var rightHigh: UILabel!
-    @IBOutlet weak var rightImg: UIImageView!
-    
+    var weeklyReport : [Daily] = [Daily]()
     var locationManager = CLLocationManager()
-    var latitude = Double()
-    var longitude = Double()
+    var latitude = 42.3601
+    var longitude = -71.0589
     var here : String = String()
     
     override func viewDidLoad() {
@@ -55,39 +38,29 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
         callWeatherApi()
     }
     
-    
     func callWeatherApi()  {
         
-        APIHandler.sharedInstance.fetchData(latitude, longitude) { (result) in
+        APIHandler.sharedInstance.fetchData(latitude,longitude) { (result) in
             let weatherObj : WeatherData  = result!
-            let low = "L: " + String(format: "%.2f", (weatherObj.dailyLow)!)
-            let high = "H:" + String(format: "%.2f", (weatherObj.dailyHigh)!)
-            let today = self.formatDate(time: (weatherObj.time)!, format: "YYYY-MM-dd")
-            let now = self.formatDate(time: (weatherObj.time)!, format: "hh:mm")
-            let here = String((weatherObj.timezone)!)
+            
+            let low = "L: " + String(format: "%.2f", weatherObj.daily[0].lowTemp)
+            let high = "H:" + String(format: "%.2f", weatherObj.daily[0].highTemp)
+            let today = self.formatDate(time: weatherObj.currentTime!, format: "YYYY-MM-dd")
+            let now = self.formatDate(time: weatherObj.currentTime!, format: "hh:mm")
+            let here = String(weatherObj.timezone!)
+            
             DispatchQueue.main.async {
                 self.mainHighLowTemp.text = high + " " + low
                 self.mainDate.text = today
                 self.mainLocation.text = here
                 self.mainTime.text = now
-                self.summary.text = weatherObj.summary
-                
-                self.centerHigh.text = high
-                self.centerLow.text = low
-                self.centerDate.text = today
-                self.centerLocation.text = self.here
-                
-                self.leftLow.text = low
-                self.leftHigh.text = high
-                self.leftDate.text = today
-                self.leftLocation.text = self.here
-                
-                self.rightLow.text = low
-                self.rightHigh.text = high
-                self.rightDate.text = today
-                self.rightLocation.text = self.here
-
+                self.summary.text = weatherObj.currentSummary
             }
+            
+            for dailyReport in weatherObj.daily {
+                self.weeklyReport.append(dailyReport)
+            }
+            
         }
     }
     
@@ -120,4 +93,83 @@ class HomePage: UIViewController, CLLocationManagerDelegate  {
             locationManager.startUpdatingLocation()
         }
     }
+
+    
+    @IBAction func locationSearch(_ sender: UIButton) {
+        let autocompleteController = GMSAutocompleteViewController()
+        autocompleteController.delegate = self
+        
+        // Specify the place data types to return.
+        let fields: GMSPlaceField = GMSPlaceField(rawValue: UInt(GMSPlaceField.name.rawValue) |
+            UInt(GMSPlaceField.placeID.rawValue))!
+        autocompleteController.placeFields = fields
+        
+        // Specify a filter.
+        let filter = GMSAutocompleteFilter()
+        filter.type = .address
+        autocompleteController.autocompleteFilter = filter
+        
+        // Display the autocomplete view controller.
+        present(autocompleteController, animated: true, completion: nil)
+    }
+    
+}
+
+extension HomePage: GMSAutocompleteViewControllerDelegate {
+    
+    // Handle the user's selection.
+    func viewController(_ viewController: GMSAutocompleteViewController, didAutocompleteWith place: GMSPlace) {
+        do{
+                    print("Place name: \(place.name)")
+                    print("Place ID: \(place.placeID)")
+                    print("Place attributions: \(place.attributions)")
+        }
+        catch{
+            print("problem handling exception")
+        }
+
+        dismiss(animated: true, completion: nil)
+    }
+    
+    func viewController(_ viewController: GMSAutocompleteViewController, didFailAutocompleteWithError error: Error) {
+        // TODO: handle the error.
+        print("Failure to Handle Error")
+        print("Error: ", error.localizedDescription)
+    }
+    
+    // User canceled the operation.
+    func wasCancelled(_ viewController: GMSAutocompleteViewController) {
+        dismiss(animated: true, completion: nil)
+    }
+    
+    // Turn the network activity indicator on and off again.
+    func didRequestAutocompletePredictions(_ viewController: GMSAutocompleteViewController) {
+        UIApplication.shared.isNetworkActivityIndicatorVisible = true
+    }
+    
+    func didUpdateAutocompletePredictions(_ viewController: GMSAutocompleteViewController) {
+        UIApplication.shared.isNetworkActivityIndicatorVisible = false
+    }
+    
+}
+
+extension HomePage:  UICollectionViewDelegate, UICollectionViewDataSource {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 7
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as? Report
+        
+        DispatchQueue.main.async {
+            cell?.high.text = "\(self.weeklyReport[indexPath.item].highTemp)"
+            cell?.low.text = "\(self.weeklyReport[indexPath.item].lowTemp)"
+            cell?.location.text = self.weeklyReport[indexPath.item].location
+            cell?.date.text = self.formatDate(time: self.weeklyReport[indexPath.item].time, format: "YYYY-MM-dd")
+        }
+        return cell!
+    }
+    
+    
 }

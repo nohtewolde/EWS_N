@@ -12,6 +12,7 @@ import FirebaseDatabase
 
 class Join: UIViewController {
 
+    @IBOutlet weak var lblMessage: UILabel!
     @IBOutlet weak var gender: UILabel!
     @IBOutlet weak var email: UITextField!
     @IBOutlet weak var confirm: UITextField!
@@ -28,14 +29,23 @@ class Join: UIViewController {
     }
     @IBAction func gender(_ sender: UISwitch) {
         if sender.isOn{
-            gender.text = "Gender: Female"
+            gender.text = "Female"
         } else {
-            gender.text = "Gender: Male"
+            gender.text = "Male"
         }
     }
     
     @IBAction func Register(_ sender: UIButton) {
-        createUserAccount()
+        lblMessage.text = ""
+        let response = validate()
+        switch response {
+        case .success:
+            createUserAccount()
+        case .failure(_, let message):
+            lblMessage.text = lblMessage.text! + message.localized()
+            print(message.localized())
+        }
+        
     }
     
     func createUserAccount(){
@@ -53,4 +63,14 @@ class Join: UIViewController {
             }
         }
     }
+    
+    func validate() -> Valid{
+        let response = Validation.shared.validate(values: (ValidationType.email, email.text!),
+                                                  (ValidationType.password, password.text!),
+                                                  (ValidationType.stringWithFirstLetterCaps, lastname.text!),
+                                                  (ValidationType.stringWithFirstLetterCaps, firstname.text!),
+                                                  (ValidationType.alphabeticString, gender.text!))
+        return response
+    }
+    
 }
