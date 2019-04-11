@@ -25,7 +25,6 @@ class APIHandler: NSObject {
         Alamofire.request(requestURL).responseObject { (response : DataResponse<WeatherData>) in
             let dsResponse = response.result.value
             completion(dsResponse)
-            print(dsResponse)
         }
     }
 }

@@ -28,8 +28,8 @@ class HomePage: UIViewController, CLLocationManagerDelegate {
     
     var weeklyReport : [Daily] = [Daily]()
     var locationManager = CLLocationManager()
-    var latitude = 42.3601
-    var longitude = -71.0589
+    var latitude = Double()
+    var longitude = Double()
     var here : String = String()
     
     override func viewDidLoad() {
@@ -42,7 +42,7 @@ class HomePage: UIViewController, CLLocationManagerDelegate {
         
         APIHandler.sharedInstance.fetchData(latitude,longitude) { (result) in
             let weatherObj : WeatherData  = result!
-            
+            self.weeklyReport = weatherObj.daily
             let low = "L: " + String(format: "%.2f", weatherObj.daily[0].lowTemp)
             let high = "H:" + String(format: "%.2f", weatherObj.daily[0].highTemp)
             let today = self.formatDate(time: weatherObj.currentTime!, format: "YYYY-MM-dd")
@@ -50,15 +50,15 @@ class HomePage: UIViewController, CLLocationManagerDelegate {
             let here = String(weatherObj.timezone!)
             
             DispatchQueue.main.async {
-                self.mainHighLowTemp.text = high + " " + low
+                self.mainHighLowTemp.text = high + "F  " + low + "F"
                 self.mainDate.text = today
                 self.mainLocation.text = here
                 self.mainTime.text = now
                 self.summary.text = weatherObj.currentSummary
-            }
-            
-            for dailyReport in weatherObj.daily {
-                self.weeklyReport.append(dailyReport)
+                for dailyReport in weatherObj.daily {
+                    self.weeklyReport.append(dailyReport)
+                }
+                self.weeklyView.reloadData()
             }
             
         }
@@ -156,17 +156,18 @@ extension HomePage: GMSAutocompleteViewControllerDelegate {
 extension HomePage:  UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 7
+        return weeklyReport.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as? Report
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Item", for: indexPath) as? Report
         
         DispatchQueue.main.async {
             cell?.high.text = "\(self.weeklyReport[indexPath.item].highTemp)"
             cell?.low.text = "\(self.weeklyReport[indexPath.item].lowTemp)"
             cell?.location.text = self.weeklyReport[indexPath.item].location
             cell?.date.text = self.formatDate(time: self.weeklyReport[indexPath.item].time, format: "YYYY-MM-dd")
+            self.weeklyView.reloadData()
         }
         return cell!
     }

@@ -9,8 +9,6 @@
 import UIKit
 
 class Report: UICollectionViewCell {
-    
-    
     @IBOutlet weak var icon: UIImageView!
     @IBOutlet weak var date: UILabel!
     @IBOutlet weak var location: UILabel!
