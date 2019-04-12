@@ -24,6 +24,7 @@ class Join: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "blueBackground")!)
         firstname.becomeFirstResponder()
         ref = Database.database().reference()
     }

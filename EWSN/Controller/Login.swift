@@ -20,6 +20,7 @@ class Login: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "blueBackground")!)
         username.becomeFirstResponder()
         ref = Database.database().reference()
     }
@@ -27,6 +28,8 @@ class Login: UIViewController {
 
     @IBAction func login(_ sender: UIButton) {
         signUserAccount()
+        let nc = storyboard?.instantiateViewController(withIdentifier: "TabBarController")
+        present(nc!, animated: true, completion: nil)
     }
     
     

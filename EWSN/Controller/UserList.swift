@@ -19,6 +19,8 @@ class UserList: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "USERS"
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "blueBackground")!)
         ref = Database.database().reference()
     }
 

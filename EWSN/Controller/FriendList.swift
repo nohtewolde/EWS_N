@@ -19,6 +19,8 @@ class FriendList: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "FRIENDS"
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "blueBackground")!)
         ref = Database.database().reference()
     }
     

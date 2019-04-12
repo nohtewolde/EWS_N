@@ -34,6 +34,7 @@ class HomePage: UIViewController, CLLocationManagerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = UIColor(patternImage: UIImage(named: "blueBackground")!)
         setupLocation()
         callWeatherApi()
     }
@@ -48,12 +49,14 @@ class HomePage: UIViewController, CLLocationManagerDelegate {
             let today = self.formatDate(time: weatherObj.currentTime!, format: "YYYY-MM-dd")
             let now = self.formatDate(time: weatherObj.currentTime!, format: "hh:mm")
             let here = String(weatherObj.timezone!)
+            let icon = String(weatherObj.currentIcon!)
             
             DispatchQueue.main.async {
-                self.mainHighLowTemp.text = high + "F  " + low + "F"
+                self.mainHighLowTemp.text = high + "F  /" + low + "F"
                 self.mainDate.text = today
                 self.mainLocation.text = here
                 self.mainTime.text = now
+                self.mainImg.image = UIImage(named: icon)
                 self.summary.text = weatherObj.currentSummary
                 for dailyReport in weatherObj.daily {
                     self.weeklyReport.append(dailyReport)
@@ -178,12 +181,14 @@ extension HomePage:  UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Item", for: indexPath) as? Report
-        
+    
         DispatchQueue.main.async {
             cell?.high.text = "\(self.weeklyReport[indexPath.item].highTemp)"
             cell?.low.text = "\(self.weeklyReport[indexPath.item].lowTemp)"
             cell?.location.text = self.weeklyReport[indexPath.item].location
             cell?.date.text = self.formatDate(time: self.weeklyReport[indexPath.item].time, format: "YYYY-MM-dd")
+            let icon = self.weeklyReport[indexPath.item].icon
+            cell?.icon.image = UIImage(named: icon)
             self.weeklyView.reloadData()
         }
         return cell!

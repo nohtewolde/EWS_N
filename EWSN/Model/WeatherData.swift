@@ -14,6 +14,7 @@ class WeatherData: NSObject, Mappable {
     var latitude : String?
     var longitude : String?
     var timezone: String?
+    var currentIcon: String?
     var currentTime: UInt64?
     var currentSummary: String?
     var daily : [Daily] = [Daily]()
@@ -41,6 +42,7 @@ class WeatherData: NSObject, Mappable {
         longitude <- map["longitude"]
         currentTime <- map["currently.time"]
         currentSummary <- map["currently.summary"]
+        currentIcon <- map["currently.icon"]
     }
 }
 
