@@ -14,8 +14,8 @@ import GooglePlaces
 
 class HomePage: UIViewController, CLLocationManagerDelegate {
 
+    @IBOutlet weak var userProfilePhoto: UIButton!
     @IBOutlet weak var weeklyView: UICollectionView!
-    @IBOutlet weak var profileImage: UIImageView!
     @IBOutlet weak var username: UILabel!
     @IBOutlet weak var greetingMsg: UILabel!
     
@@ -94,6 +94,23 @@ class HomePage: UIViewController, CLLocationManagerDelegate {
         }
     }
 
+    @IBAction func userProfilePhoto(_ sender: UIButton) {
+        
+        let imagePickerController = UIImagePickerController()
+        imagePickerController.delegate = self
+        let actionSheet = UIAlertController(title: "Photo Source", message: "Choose Source", preferredStyle: .actionSheet)
+        actionSheet.addAction(UIAlertAction(title: "Camera", style: .default, handler: { (action: UIAlertAction) in
+            imagePickerController.sourceType = .camera
+            self.present(imagePickerController, animated: true, completion: nil)
+        }))
+        actionSheet.addAction(UIAlertAction(title: "Photo Library", style: .default, handler: { (action: UIAlertAction) in
+            imagePickerController.sourceType = .photoLibrary
+            self.present(imagePickerController, animated: true, completion: nil)
+        }))
+        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        self.present(actionSheet, animated: true, completion: nil)
+        
+    }
     
     @IBAction func locationSearch(_ sender: UIButton) {
         let autocompleteController = GMSAutocompleteViewController()
@@ -172,5 +189,18 @@ extension HomePage:  UICollectionViewDelegate, UICollectionViewDataSource {
         return cell!
     }
     
+    
+}
+
+extension HomePage: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        let image = info[UIImagePickerController.InfoKey.originalImage] as! UIImage
+        userProfilePhoto.setImage(image, for: .normal)
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
     
 }
